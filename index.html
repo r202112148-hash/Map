@@ -135,6 +135,32 @@ function renderMarkers() {
             renderMarkers();
         }
         renderMarkers();
+        // --- 實時更新邏輯 (Real-time Update) ---
+
+        // 1. 建立一個專門負責更新數據的 Function
+        function fetchLatestData() {
+            console.log("正在獲取最新數據..."); // 你可以在瀏覽器的 Console 看到這行字
+        
+            // 模擬從 API 獲取新數據：我們隨機改變充電站的剩餘車位數字
+            allLocations.forEach(loc => {
+                if (loc.type === 'charging') {
+                    // 隨機生成一個 0 到 15 的數字來模擬車位變化
+                    const randomVacancy = Math.floor(Math.random() * 16);
+                    
+                    // 更新該地點的詳情內容
+                    loc.details = `快充 / 中充設備<br><b style="color: ${randomVacancy === 0 ? 'red' : 'black'}">實時剩餘車位：${randomVacancy} 個</b> (每分鐘更新)`;
+                }
+            });
+        
+            // 2. 數據更新後，必須重新呼叫渲染函數，把新的大頭針畫上地圖
+            renderMarkers();
+        }
+        
+        // 3. 設定計時器 (setInterval)
+        // 第一個參數是要執行的 Function，第二個參數是毫秒 (ms)。
+        // 為了讓你馬上看到效果，我們設為 5000 毫秒 (即 5 秒更新一次)。
+        // 正式上線時，通常會改為 60000 (1 分鐘)。
+        setInterval(fetchLatestData, 5000);
     </script>
 </body>
 </html>
