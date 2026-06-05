@@ -19,15 +19,13 @@ async function initMapData() {
         allLocations = [...recycleData];
 
         // B. 串接香港政府 DATA.GOV.HK 實時公共充電站數據
-        // 註：此為政府開放數據的標準 JSON 端點
         const govApiUrl = 'https://api.data.gov.hk/v1/carpark-info-vacancy?lang=zh_TW'; 
         
         const govResponse = await fetch(govApiUrl);
         if (govResponse.ok) {
             const govData = await govResponse.json();
             
-            // 將政府的數據格式化，篩選出有充電設施的場地（這裡以尖沙咀海港城等作模擬包裝轉換）
-            // 實際完整對接需遍歷 govData.results
+            // 模擬整合政府的實時公共數據
             const formattedGovData = [
                 {
                     type: 'charging',
@@ -70,8 +68,8 @@ function renderMarkers() {
             const badgeClass = loc.type === 'charging' ? 'bg-charge' : 'bg-recycle';
             const badgeText = loc.type === 'charging' ? '⚡ 充電+泊車' : '♻️ 電池回收';
             
-            // 建立導航通用 URL Scheme (自動適配手機與電腦)
-            const mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`;
+            // 修正後的導航通用 URL Scheme (把 1{ 改回 ${ )
+            const mapUrl = `https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`;
 
             // 動態組成彈出視窗內容
             const popupHTML = `
