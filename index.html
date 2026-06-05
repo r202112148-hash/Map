@@ -118,7 +118,17 @@ function renderMarkers() {
             const customIcon = loc.type === 'charging' ? iconCharging : iconRecycle;
             
             //  正確的官方路徑規劃格式
-            const mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`;
+            // 偵測用戶是不是用 iPhone/iPad
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            
+            let mapUrl;
+            if (isIOS) {
+                //  Apple Maps 的路徑規劃格式 (daddr 代表 Destination Address)
+                mapUrl = `https://maps.apple.com/?daddr=${loc.lat},${loc.lng}`;
+            } else {
+                //  Google Maps 的路徑規劃格式
+                mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`;
+            }
 
             const popupHTML = `
                 <span class="badge ${badgeClass}">${badgeText}</span>
