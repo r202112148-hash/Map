@@ -116,7 +116,7 @@ function renderMarkers() {
                 <h3 style="margin:4px 0; font-size:16px;">${loc.name}</h3>
                 <p style="margin:2px 0; font-size:12px; color:#7f8c8d;">營運/認可機構: ${loc.provider}</p>
                 <div style="margin-top:8px; font-size:13px; line-height:1.4;">${loc.details}</div>
-                <a href="${mapUrl}" target="_blank" class="popup-route-btn">🧭 導航一條龍帶你去</a>
+                <a href="${mapUrl}" target="_blank" class="popup-route-btn">🧭 導航</a>
             `;
             // 2. add the custom icon to the marker setting
             const marker = L.marker([loc.lat, loc.lng], { icon: customIcon }).bindPopup(popupHTML);
