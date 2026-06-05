@@ -85,34 +85,56 @@
         ];
 
         // 渲染大頭針到地圖上
-        function renderMarkers() {
-            currentMarkers.forEach(marker => map.removeLayer(marker));
-            currentMarkers = [];
+        // --- Define Custom Marker Icons ---
+const iconRecycle = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
 
-            allLocations.forEach(loc => {
-                if (currentFilter === 'all' || loc.type === currentFilter) {
-                    
-                    const badgeClass = loc.type === 'charging' ? 'bg-charge' : 'bg-recycle';
-                    const badgeText = loc.type === 'charging' ? '⚡ 充電+泊車' : '♻️ 電池回收';
-                    
-                    // 已修正的 URL 格式
-                    const mapUrl = `http://googleusercontent.com/maps.google.com/?q=${loc.lat},${loc.lng}`;
+const iconCharging = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+        // 渲染大頭針到地圖上
+function renderMarkers() {
+    currentMarkers.forEach(marker => map.removeLayer(marker));
+    currentMarkers = [];
 
-                    const popupHTML = `
-                        <span class="badge ${badgeClass}">${badgeText}</span>
-                        <h3 style="margin:4px 0; font-size:16px;">${loc.name}</h3>
-                        <p style="margin:2px 0; font-size:12px; color:#7f8c8d;">營運/認可機構: ${loc.provider}</p>
-                        <div style="margin-top:8px; font-size:13px; line-height:1.4;">${loc.details}</div>
-                        <a href="${mapUrl}" target="_blank" class="popup-route-btn">🧭 導航一條龍帶你去</a>
-                    `;
+    allLocations.forEach(loc => {
+        if (currentFilter === 'all' || loc.type === currentFilter) {
+            
+            const badgeClass = loc.type === 'charging' ? 'bg-charge' : 'bg-recycle';
+            const badgeText = loc.type === 'charging' ? '⚡ 充電+泊車' : '♻️ 電池回收';
+            
+            // 1. Choose the icon color based on the category
+            const customIcon = loc.type === 'charging' ? iconCharging : iconRecycle;
+            
+            const mapUrl = `http://googleusercontent.com/maps.google.com/?q=${loc.lat},${loc.lng}`;
 
-                    const marker = L.marker([loc.lat, loc.lng]).bindPopup(popupHTML);
-                    marker.addTo(map);
-                    currentMarkers.push(marker); 
-                }
-            });
+            const popupHTML = `
+                <span class="badge ${badgeClass}">${badgeText}</span>
+                <h3 style="margin:4px 0; font-size:16px;">${loc.name}</h3>
+                <p style="margin:2px 0; font-size:12px; color:#7f8c8d;">營運/認可機構: ${loc.provider}</p>
+                <div style="margin-top:8px; font-size:13px; line-height:1.4;">${loc.details}</div>
+                <a href="${mapUrl}" target="_blank" class="popup-route-btn">🧭 導航一條龍帶你去</a>
+            `;
+
+            // 2. Add the custom icon to the marker settings
+            const marker = L.marker([loc.lat, loc.lng], { icon: customIcon }).bindPopup(popupHTML);
+            
+            marker.addTo(map);
+            currentMarkers.push(marker); 
         }
-
+    });
+}
         // 分類篩選控制
         function filterMarkers(type) {
             currentFilter = type;
