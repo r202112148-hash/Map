@@ -138,26 +138,37 @@ function renderMarkers() {
         // real time update
 
         // function for updating data--looks like
-        function fetchLatestData() {
-            console.log("正在獲取最新數據...");
+        // 使用 async 關鍵字，宣告這是一個需要等待連線的函數
+        async function fetchLatestData() {
+            console.log("正在向政府伺服器索取實時數據...");
         
-            // changing parking space
-            allLocations.forEach(loc => {
-                if (loc.type === 'charging') {
-                    // random number
-                    const randomVacancy = Math.floor(Math.random() * 16);
-                    
-                    // update data
-                    loc.details = `快充 / 中充設備<br><b style="color: ${randomVacancy === 0 ? 'red' : 'black'}">實時剩餘車位：${randomVacancy} 個</b> (每分鐘更新)`;
-                }
-            });
+            try {
+                // 1. 派速遞員去政府網址攞資料 (加上 await 代表要等佢返嚟)
+                const response = await fetch('https://api.data.gov.hk/v1/carpark-info-vacancy');
         
-            // recall function
-            renderMarkers();
+                // 2. 將攞到嘅資料拆包，轉換成 JavaScript 睇得明嘅 JSON 格式
+                const govData = await response.json();
+        
+                // 3. 將龐大嘅政府數據印喺 Console，等你可以研究佢嘅結構
+                console.log("成功攞到政府數據！", govData);
+        
+                // 4. (進階預告) 喺真實專案中，我哋會喺呢度寫邏輯，
+                // 喺 govData.results 入面搵出「海港城」嘅 ID，然後抽個車位數字出嚟，
+                // 再更新我哋嘅 allLocations，最後呼叫 renderMarkers()。
+        
+            } catch (error) {
+                // 如果無上網或者政府伺服器死機，就會跌入呢度
+                console.error("API 連線失敗，請檢查網路：", error);
+            }
         }
         
-        // timmer--1 minute
+        // 每 60 秒 (60000 毫秒) 自動去政府度攞一次最新數據
         setInterval(fetchLatestData, 60000);
+        
+        // 網頁一打開，我哋馬上先攞一次！
+        fetchLatestData();
+        
+
     </script>
 </body>
 </html>
