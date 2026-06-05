@@ -140,33 +140,43 @@ function renderMarkers() {
         // function for updating data--looks like
         // 使用 async 關鍵字，宣告這是一個需要等待連線的函數
         async function fetchLatestData() {
-            console.log("正在向政府伺服器索取實時數據...");
-        
-            try {
-                // 1. 派速遞員去政府網址攞資料 (加上 await 代表要等佢返嚟)
-                const response = await fetch('https://api.data.gov.hk/v1/carpark-info-vacancy');
-        
-                // 2. 將攞到嘅資料拆包，轉換成 JavaScript 睇得明嘅 JSON 格式
-                const govData = await response.json();
-        
-                // 3. 將龐大嘅政府數據印喺 Console，等你可以研究佢嘅結構
-                console.log("成功攞到政府數據！", govData);
-        
-                // 4. (進階預告) 喺真實專案中，我哋會喺呢度寫邏輯，
-                // 喺 govData.results 入面搵出「海港城」嘅 ID，然後抽個車位數字出嚟，
-                // 再更新我哋嘅 allLocations，最後呼叫 renderMarkers()。
-        
-            } catch (error) {
-                // 如果無上網或者政府伺服器死機，就會跌入呢度
-                console.error("API 連線失敗，請檢查網路：", error);
+    console.log("正在向政府伺服器索取實時數據...");
+
+    try {
+        const response = await fetch('https://api.data.gov.hk/v1/carpark-info-vacancy');
+        const govData = await response.json();
+
+        // 1. 尋找 (Find)：假設政府數據的陣列叫做 results
+        // 我們用 find() 找出名稱包含「海港城」或者 ID 符合的停車場
+        const realHarbourCityData = govData.results.find(
+            carpark => carpark.name === '尖沙咀海港城停車場 (海運大廈)' // 這裡需對應政府的真實名稱或 ID
+        );
+
+        // 如果真的有找到這個停車場的即時數據
+        if (realHarbourCityData) {
+            // 找出我們自己地圖資料庫裡的海港城
+            const myHarbourCity = allLocations.find(loc => loc.name.includes('海港城'));
+
+            // 2. 更新 (Update)：把政府的車位數字 (假設屬性叫 vacancy) 寫入我們的詳情中
+            if (myHarbourCity) {
+                const currentVacancy = realHarbourCityData.vacancy; // 提取實時數字
+                
+                // 動態改變顏色：沒有車位就亮紅燈，有車位就亮綠燈
+                const vacancyColor = currentVacancy > 0 ? '#27ae60' : 'red';
+
+                myHarbourCity.details = `快充 (60kW) x 2 | 中充 (7kW) x 10<br>
+                <b style="color: ${vacancyColor}">實時剩餘車位：${currentVacancy} 個</b> (政府 API 實時同步)`;
             }
         }
-        
-        // 每 60 秒 (60000 毫秒) 自動去政府度攞一次最新數據
-        setInterval(fetchLatestData, 60000);
-        
-        // 網頁一打開，我哋馬上先攞一次！
-        fetchLatestData();
+
+        // 3. 重畫 (Render)：把更新後的資訊更新到地圖的彈出視窗上
+        renderMarkers();
+        console.log("地圖大頭針已根據政府實時數據更新！");
+
+    } catch (error) {
+        console.error("API 連線失敗，請檢查網路：", error);
+    }
+}
         
 
     </script>
