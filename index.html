@@ -117,7 +117,8 @@ function renderMarkers() {
             // 1. Choose the icon color based on the category
             const customIcon = loc.type === 'charging' ? iconCharging : iconRecycle;
             
-            const mapUrl = `http://googleusercontent.com/maps.google.com/?q=${loc.lat},${loc.lng}`;
+            //  正確的官方路徑規劃格式
+            const mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`;
 
             const popupHTML = `
                 <span class="badge ${badgeClass}">${badgeText}</span>
