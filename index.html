@@ -7,14 +7,11 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-        /*control*/
         .controls { padding: 12px; background: #2c3e50; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .btn { background: #34495e; color: white; border: none; padding: 8px 16px; margin: 0 4px; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
         .btn:hover { background: #1abc9c; }
         .btn.active { background: #1abc9c; font-weight: bold; }
-        /*map size*/
         #map { height: calc(100vh - 53px); width: 100%; }
-        /*popoutwindow*/
         .popup-route-btn { display: block; text-align: center; background: #27ae60; color: white; padding: 6px; margin-top: 8px; text-decoration: none; border-radius: 4px; font-weight: bold; }
         .popup-route-btn:hover { background: #219653; }
         .badge { display: inline-block; padding: 3px 6px; border-radius: 3px; font-size: 11px; color: white; font-weight: bold; margin-bottom: 5px; }
@@ -29,108 +26,101 @@
         <button class="btn" id="btn-recycle" onclick="filterMarkers('recycle')">♻️ 電池回收點</button>
     </div>
     <div id="map"></div>
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // original center
+        // 1. 初始化地圖
         const map = L.map('map').setView([22.2988, 114.1722], 14);
-        // OpenStreetMap
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
+
         let currentMarkers = []; 
         let currentFilter = 'all';
-        // database
+
+        // 2. 資料庫
         const allLocations = [
             {
                 type: 'recycle',
                 name: '環保署認可 EV 電池處理中心 (尖沙咀站)',
-                lat: 22.3020,
-                lng: 114.1750,
+                lat: 22.3020, lng: 114.1750,
                 provider: '環境保護署認可專門機構',
                 details: '收退役電動車鋰電池、鉛酸電池。<br>開放時間：星期一至五 09:00 - 18:00'
             },
             {
                 type: 'recycle',
                 name: '綠色汽車循環再造廠 (官塘分店)',
-                lat: 22.3125,
-                lng: 114.2250,
+                lat: 22.3125, lng: 114.2250,
                 provider: '合資格回收商',
                 details: '專門處理 EV 動力電池組件。<br>開放時間：星期一至六 10:00 - 19:00'
             },
             {
                 type: 'charging',
                 name: '尖沙咀海港城停車場 (海運大廈)',
-                lat: 22.2951,
-                lng: 114.1668,
+                lat: 22.2951, lng: 114.1668,
                 provider: '中電 CLP / 停車場直營',
                 details: '快充 (60kW) x 2 | 中充 (7kW) x 10<br><b>實時剩餘車位：12 個</b> (每分鐘更新)'
             },
             {
                 type: 'charging',
                 name: '中間道兒童遊樂場地下停車場',
-                lat: 22.2965,
-                lng: 114.1740,
+                lat: 22.2965, lng: 114.1740,
                 provider: '政府公共充電站 (EPD)',
                 details: '標準充電位 x 15<br><b>實時剩餘車位：5 個</b> (每分鐘更新)'
             }
         ];
-        // custom markers
-const iconRecycle = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
-const iconCharging = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
-        // marking pins
-function renderMarkers() {
-    currentMarkers.forEach(marker => map.removeLayer(marker));
-    currentMarkers = [];
-    allLocations.forEach(loc => {
-        if (currentFilter === 'all' || loc.type === currentFilter) {
-            const badgeClass = loc.type === 'charging' ? 'bg-charge' : 'bg-recycle';
-            const badgeText = loc.type === 'charging' ? '⚡ 充電+泊車' : '♻️ 電池回收';
-            // icon color based on the category
-            const customIcon = loc.type === 'charging' ? iconCharging : iconRecycle;
 
-            
-            // detect iphone/ipad _dont know if it will work            
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            let mapUrl;
-            if (isIOS) {
-                //  Apple maps
-                mapUrl = `https://maps.apple.com/?daddr=${loc.lat},${loc.lng}`;
-            } else {
-                //  Google maps
-                mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`;
-            }
-            // end of function decting ipad/iphone
+        // 3. 自定義大頭針圖標
+        const iconRecycle = new L.Icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
 
-            
-            const popupHTML = `
-                <span class="badge ${badgeClass}">${badgeText}</span>
-                <h3 style="margin:4px 0; font-size:16px;">${loc.name}</h3>
-                <p style="margin:2px 0; font-size:12px; color:#7f8c8d;">營運/認可機構: ${loc.provider}</p>
-                <div style="margin-top:8px; font-size:13px; line-height:1.4;">${loc.details}</div>
-                <a href="${mapUrl}" target="_blank" class="popup-route-btn">🧭 導航</a>
-            `;
-            // add the custom icon to the marker setting
-            const marker = L.marker([loc.lat, loc.lng], { icon: customIcon }).bindPopup(popupHTML);
-            marker.addTo(map);
-            currentMarkers.push(marker); 
+        const iconCharging = new L.Icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+        });
+
+        // 4. 畫大頭針的函數
+        function renderMarkers() {
+            currentMarkers.forEach(marker => map.removeLayer(marker));
+            currentMarkers = [];
+
+            allLocations.forEach(loc => {
+                if (currentFilter === 'all' || loc.type === currentFilter) {
+                    const badgeClass = loc.type === 'charging' ? 'bg-charge' : 'bg-recycle';
+                    const badgeText = loc.type === 'charging' ? '⚡ 充電+泊車' : '♻️ 電池回收';
+                    const customIcon = loc.type === 'charging' ? iconCharging : iconRecycle;
+
+                    // 設備偵測與導航 URL 生成
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                    let mapUrl;
+                    if (isIOS) {
+                        mapUrl = `https://maps.apple.com/?daddr=${loc.lat},${loc.lng}`;
+                    } else {
+                        // 修正：使用 Google 官方標準的路徑規劃 URL
+                        mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}`;
+                    }
+
+                    const popupHTML = `
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                        <h3 style="margin:4px 0; font-size:16px;">${loc.name}</h3>
+                        <p style="margin:2px 0; font-size:12px; color:#7f8c8d;">營運/認可機構: ${loc.provider}</p>
+                        <div style="margin-top:8px; font-size:13px; line-height:1.4;">${loc.details}</div>
+                        <a href="${mapUrl}" target="_blank" class="popup-route-btn">🧭 導航</a>
+                    `;
+
+                    const marker = L.marker([loc.lat, loc.lng], { icon: customIcon }).bindPopup(popupHTML);
+                    marker.addTo(map);
+                    currentMarkers.push(marker); 
+                }
+            });
         }
-    });
-}
-        // filter of pins
+
+        // 5. 篩選按鈕功能
         function filterMarkers(type) {
             currentFilter = type;
             document.querySelectorAll('.btn').forEach(btn => btn.classList.remove('active'));
@@ -139,42 +129,42 @@ function renderMarkers() {
             if(type === 'recycle') document.getElementById('btn-recycle').classList.add('active');
             renderMarkers();
         }
-        renderMarkers();
-        // real time update
-        // function for updating data throgh gov.. data
+
+        // 6. 實時更新政府數據函數
         async function fetchLatestData() {
-    console.log("正在向政府伺服器索取實時數據...");// looks gd
+            console.log("正在向政府伺服器索取實時數據...");
+            try {
+                const response = await fetch('https://api.data.gov.hk/v1/carpark-info-vacancy');
+                const govData = await response.json();
 
-    try {
-        const response = await fetch('https://api.data.gov.hk/v1/carpark-info-vacancy');
-        const govData = await response.json();
+                const realHarbourCityData = govData.results.find(
+                    carpark => carpark.name === '尖沙咀海港城停車場 (海運大廈)' 
+                );
 
-        // gov. data as'results'
-        const realHarbourCityData = govData.results.find(
-            carpark => carpark.name === '尖沙咀海港城停車場 (海運大廈)' 
-        );
-        if (realHarbourCityData) {
-            // find the one in database
-            const myHarbourCity = allLocations.find(loc => loc.name.includes('海港城'));
-
-            // update data in code
-            if (myHarbourCity) {
-                const currentVacancy = realHarbourCityData.vacancy;
-                const vacancyColor = currentVacancy > 0 ? '#27ae60' : 'red';
-
-                myHarbourCity.details = `快充 (60kW) x 2 | 中充 (7kW) x 10<br>
-                <b style="color: ${vacancyColor}">實時剩餘車位：${currentVacancy} 個</b> (政府 API 實時同步)`;
+                if (realHarbourCityData) {
+                    const myHarbourCity = allLocations.find(loc => loc.name.includes('海港城'));
+                    if (myHarbourCity) {
+                        const currentVacancy = realHarbourCityData.vacancy;
+                        const vacancyColor = currentVacancy > 0 ? '#27ae60' : 'red';
+                        myHarbourCity.details = `快充 (60kW) x 2 | 中充 (7kW) x 10<br>
+                        <b style="color: ${vacancyColor}">實時剩餘車位：${currentVacancy} 個</b> (政府 API 實時同步)`;
+                    }
+                }
+                renderMarkers();
+                console.log("地圖已根據政府實時數據更新");
+            } catch (error) {
+                console.error("API 連線失敗，請檢查網路：", error);
             }
         }
 
-        // update data on map
+        // --- 啟動區 (你原本漏了這裡！) ---
+        
+        // A. 網頁打開時，先畫一次初始大頭針
         renderMarkers();
-        console.log("地圖已根據政府實時數據更新");
-
-    } catch (error) {
-        console.error("API 連線失敗，請檢查網路：", error);
-    }
-}
+        
+        // B. 啟動計時器，每 60 秒跑一次政府數據更新
+        setInterval(fetchLatestData, 60000);
+        
     </script>
 </body>
 </html>
